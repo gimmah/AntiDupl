@@ -21,7 +21,7 @@ jobs:
       matrix:
         configuration: [Debug, Release, Publish]
 
-    runs-on: windows-latest
+    runs-on: windows-2025
 
     env:
       Solution_Name: ./src/AntiDupl.sln
