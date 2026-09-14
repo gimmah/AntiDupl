@@ -21,10 +21,11 @@ jobs:
       matrix:
         configuration: [Debug, Release, Publish]
 
-    runs-on: windows-2025
+    runs-on: windows-2022
 
     env:
       Solution_Name: ./src/AntiDupl.sln
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
 
     steps:
     - name: Checkout
@@ -43,12 +44,28 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: nuget restore ${{env.Solution_Name}}
 
+    - name: Restore vcpkg binary archives
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-
+          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-
+
     - name: Run and cache vcpkg dependecies
       uses: lukka/run-vcpkg@v11
       with:
         vcpkgGitCommitId: 3b9d086009cc1c2256e9c28ad44a00036fbd9b26
         vcpkgJsonGlob: src/vcpkg.json
-        runVcpkgInstall: false
+        runVcpkgInstall: true
+
+    - name: Save vcpkg binary archives
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
 
     - name: Integrate vcpkg
       working-directory: ${{env.VCPKG_ROOT}}
