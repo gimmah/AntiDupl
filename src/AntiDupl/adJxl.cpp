@@ -72,7 +72,7 @@ namespace ad
 					JXL_DEC_FULL_IMAGE))
 			{
 #ifdef AD_LOGGER_ENABLE
-				AD_LOG("JxlDecoderSubscribeEvents failed\n);
+				AD_LOG("JxlDecoderSubscribeEvents failed\n");
 #endif//AD_LOGGER_ENABLE
 				return NULL;
 			}
@@ -82,7 +82,7 @@ namespace ad
 				runner.get()))
 			{
 #ifdef AD_LOGGER_ENABLE
-				AD_LOG("JxlDecoderSetParallelRunner failed\n);
+				AD_LOG("JxlDecoderSetParallelRunner failed\n");
 #endif//AD_LOGGER_ENABLE
 				return NULL;
 			}
@@ -118,7 +118,7 @@ namespace ad
 					if (JXL_DEC_SUCCESS != JxlDecoderGetBasicInfo(decoder.get(), &info))
 					{
 #ifdef AD_LOGGER_ENABLE
-						AD_LOG("JxlDecoderGetBasicInfo failed\n);
+						AD_LOG("JxlDecoderGetBasicInfo failed\n");
 #endif//AD_LOGGER_ENABLE
 						return NULL;
 					}
@@ -137,7 +137,7 @@ namespace ad
 							decoder.get(), JXL_COLOR_PROFILE_TARGET_DATA, &icc_size))
 					{
 #ifdef AD_LOGGER_ENABLE
-						AD_LOG("JxlDecoderGetICCProfileSize failed\n);
+						AD_LOG("JxlDecoderGetICCProfileSize failed\n");
 #endif//AD_LOGGER_ENABLE
 						return NULL;
 					}
@@ -156,7 +156,7 @@ namespace ad
 						JxlDecoderImageOutBufferSize(decoder.get(), &format, &buffer_size))
 					{
 #ifdef AD_LOGGER_ENABLE
-						AD_LOG("JxlDecoderImageOutBufferSize failed\n);
+						AD_LOG("JxlDecoderImageOutBufferSize failed\n");
 #endif//AD_LOGGER_ENABLE
 						return NULL;
 					}
