@@ -493,6 +493,7 @@ namespace ad
             case AD_LOCAL_ACTION_PERFORM_HINT:
                 if(pResult->hint == AD_HINT_DELETE_FIRST)
                     return Delete(pResult->first);
+                break;
             case AD_LOCAL_ACTION_MISTAKE:
                 m_pMistakeStorage->Add(pResult->first);
                 m_pCurrent->change->mistakenResults.push_back(pResult);
