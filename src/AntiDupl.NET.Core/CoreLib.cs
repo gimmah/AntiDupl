@@ -726,15 +726,23 @@ namespace AntiDupl.NET.Core
 
         private bool SetPath(CoreDll.PathType pathType, CorePathWithSubFolder[] path)
         {
+            if (path.Length == 0)
+            {
+                return m_dll.adPathWithSubFolderSetW(m_handle,
+                    pathType,
+                    IntPtr.Zero,
+                    new IntPtr(0)) == Error.Ok;
+            }
+
             char[] buffer = new char[path.Length * (CoreDll.MAX_PATH_EX + 1)];
             for (int i = 0; i < path.Length; i++)
             {
                 path[i].path.CopyTo(0, buffer, i * (CoreDll.MAX_PATH_EX + 1), path[i].path.Length);
                 buffer[(CoreDll.MAX_PATH_EX + 1) * i + CoreDll.MAX_PATH_EX] = path[i].enableSubFolder ? (char)1 : (char)0;
             }
-            
-            return m_dll.adPathWithSubFolderSetW(m_handle, 
-                pathType, 
+
+            return m_dll.adPathWithSubFolderSetW(m_handle,
+                pathType,
                 Marshal.UnsafeAddrOfPinnedArrayElement(buffer, 0),
                 new IntPtr(path.Length)) == Error.Ok;
         }
