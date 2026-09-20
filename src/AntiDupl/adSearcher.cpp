@@ -40,6 +40,7 @@ namespace ad
         , m_pOptions(pEngine->Options())
         , m_pImageDataStorage(pEngine->ImageDataStorage())
         , m_searchedImageSize(0)
+        , m_ignoreFilenameRegexValid(false)
     {
     }
 
@@ -140,19 +141,11 @@ namespace ad
             if(extension == m_extensions[i])
             {
                 // Check filename filter - only applies to files
-                if(!m_pOptions->ignoreFilenameFilter.empty())
+                if(!m_pOptions->ignoreFilenameFilter.empty() && m_ignoreFilenameRegexValid)
                 {
                     TString filename = GetFileName(path);
-                    try
-                    {
-                        std::wregex regex(m_pOptions->ignoreFilenameFilter);
-                        if(std::regex_match(filename, regex))
-                            return false; // File matches filter, reject it
-                    }
-                    catch(...)
-                    {
-                        // Invalid regex, ignore and accept file
-                    }
+                    if(std::regex_match(filename, m_ignoreFilenameRegex))
+                        return false; // File matches filter, reject it
                 }
                 return true;
             }
@@ -163,6 +156,21 @@ namespace ad
     void TSearcher::InitExtensions()
     {
         m_extensions.clear();
+
+        m_ignoreFilenameRegexValid = false;
+        if(!m_pOptions->ignoreFilenameFilter.empty())
+        {
+            try
+            {
+                m_ignoreFilenameRegex = std::wregex(m_pOptions->ignoreFilenameFilter);
+                m_ignoreFilenameRegexValid = true;
+            }
+            catch(...)
+            {
+                // Invalid regex, ignore and accept all files
+            }
+        }
+
         AddExtensions(AD_IMAGE_BMP, m_pOptions->search.BMP);
         AddExtensions(AD_IMAGE_GIF, m_pOptions->search.GIF);
         AddExtensions(AD_IMAGE_JPEG, m_pOptions->search.JPEG);

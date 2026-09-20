@@ -25,6 +25,7 @@
 #define __adSearcher_h__
 
 #include "adConfig.h"
+#include <regex>
 
 namespace ad
 {
@@ -59,6 +60,8 @@ namespace ad
         TImageDataStorage *m_pImageDataStorage;
         TStrings m_extensions;
         adUInt64 m_searchedImageSize;
+        std::wregex m_ignoreFilenameRegex;
+        bool m_ignoreFilenameRegexValid;
     };
     //-------------------------------------------------------------------------
 }
