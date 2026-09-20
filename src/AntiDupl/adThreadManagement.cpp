@@ -255,6 +255,18 @@ namespace ad
         m_addCounter = 0;
     }
 
+    // Broadcasts pImageData to every compare thread's queue, but tags it with a
+    // single round-robin owner. Each compare thread runs its own independent
+    // TImageComparer (own m_sets) and only its owner ever stores the image
+    // (TImageComparer::Accept(.., add=true) -> Add()); every other thread only
+    // compares against it (add=false). Because all N queues receive images in
+    // the same global order and each thread drains its own queue in FIFO order,
+    // thread T always holds exactly the subset of prior images it owns by the
+    // time a later image reaches it. So for a new image, the N threads'
+    // Compare() calls run in parallel against disjoint shards of the prior
+    // history whose union is the full history: every pair is still compared
+    // exactly once, but the O(n) comparison work per new image is actually
+    // split across threads rather than repeated on each of them.
     void TCompareManager::Add(TImageData *pImageData)
     {
         if(CanCompare(pImageData))
