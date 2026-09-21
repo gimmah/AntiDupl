@@ -3,9 +3,9 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
-	<AssemblyVersion>2.3.14.0</AssemblyVersion>
-  <FileVersion>2.3.14.0</FileVersion>
-  <Version>2.3.14</Version>
+	<AssemblyVersion>2.3.15.0</AssemblyVersion>
+  <FileVersion>2.3.15.0</FileVersion>
+  <Version>2.3.15</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Platforms>x64</Platforms>
     <Configurations>Debug;Release;Publish</Configurations>
