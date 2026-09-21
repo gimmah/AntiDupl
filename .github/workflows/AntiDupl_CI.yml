@@ -1,0 +1,170 @@
+name: AntiDupl CI Build
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+env:
+  VCPKG_DEFAULT_TRIPLET: x64-windows-static
+  VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+
+jobs:
+
+  build:
+    
+    strategy:
+      matrix:
+        configuration: [Debug, Release, Publish]
+
+    runs-on: windows-2022
+
+    env:
+      Solution_Name: ./src/AntiDupl.sln
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      
+    - name: Read version.txt
+      id: version
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ./src/version.txt
+      
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v2
+      
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.Solution_Name}}
+
+    - name: Restore vcpkg binary archives
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-
+          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-
+
+    - name: Run and cache vcpkg dependecies
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: a1cae005c39be7b18ba319fced856b68d7276271
+        vcpkgJsonGlob: src/vcpkg.json
+        runVcpkgInstall: true
+
+    - name: Save vcpkg binary archives
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
+
+    - name: Integrate vcpkg
+      working-directory: ${{env.VCPKG_ROOT}}
+      run: |
+        ${{ github.workspace }}/vcpkg/vcpkg.exe integrate install
+
+    - if: matrix.configuration == 'Release' || matrix.configuration == 'Debug'
+      name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=$env:Configuration /p:Platform=x64 $env:Solution_Name
+      env: 
+        Configuration: ${{ matrix.configuration }}
+
+    - if: matrix.configuration == 'Publish'
+      name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m $env:Solution_Name /p:Configuration=$env:Configuration /p:Platform=x64 -restore -t:Publish -p:PublishProfile="AntiDuplPublishSingleFile"
+      env: 
+        Configuration: ${{ matrix.configuration }}
+        
+    - if: matrix.configuration == 'Release'
+      name: Make release binary and source files
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: |
+        cd cmd
+        .\MakeBin.cmd
+      
+    - if: matrix.configuration == 'Publish'
+      name: Make release binary and source files
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: |
+        cd cmd
+        .\MakePublish.cmd
+      
+    - if: matrix.configuration == 'Release'
+      name: Upload build
+      uses: actions/upload-artifact@v4
+      with:
+        name: "AntiDupl.NET-${{ steps.version.outputs.content }} build"
+        path: |
+              ${{ github.workspace }}\out\bin\AntiDupl.NET-${{ steps.version.outputs.content }}.exe
+              ${{ github.workspace }}\out\bin\AntiDupl.NET-${{ steps.version.outputs.content }}.exe.hash.txt
+              ${{ github.workspace }}\out\bin\AntiDupl.NET-${{ steps.version.outputs.content }}.zip
+              ${{ github.workspace }}\out\bin\AntiDupl.NET-${{ steps.version.outputs.content }}.zip.hash.txt
+      
+    - if: matrix.configuration == 'Publish'
+      name: Upload build SingleFilePortable
+      uses: actions/upload-artifact@v4
+      with:
+        name: "AntiDupl.NET-${{ steps.version.outputs.content }} build SingleFilePortable"
+        path: |
+              ${{ github.workspace }}\out\Publish\AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.exe
+              ${{ github.workspace }}\out\Publish\AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.exe.hash.txt
+              ${{ github.workspace }}\out\Publish\AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.zip
+              ${{ github.workspace }}\out\Publish\AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.zip.hash.txt
+    
+  create-draft-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+
+    runs-on: windows-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Read version.txt
+        id: version
+        uses: juliangruber/read-file-action@v1
+        with:
+          path: ./src/version.txt
+        
+      - name: Load all artifacts
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: "AntiDupl.NET-${{ steps.version.outputs.content }} build"
+          
+      - name: Load all artifacts
+        uses: actions/download-artifact@v4.1.7
+        with:
+          name: "AntiDupl.NET-${{ steps.version.outputs.content }} build SingleFilePortable"
+          
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "AntiDupl.NET v${{ steps.version.outputs.content }}"
+          prerelease: true
+          files: |
+            AntiDupl.NET-${{ steps.version.outputs.content }}.exe
+            AntiDupl.NET-${{ steps.version.outputs.content }}.exe.hash.txt
+            AntiDupl.NET-${{ steps.version.outputs.content }}.zip
+            AntiDupl.NET-${{ steps.version.outputs.content }}.zip.hash.txt
+            AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.exe
+            AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.exe.hash.txt
+            AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.zip
+            AntiDupl.NET-${{ steps.version.outputs.content }}_SingleFilePortable.zip.hash.txt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

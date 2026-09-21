@@ -23,6 +23,7 @@ bld/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
+out/
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -169,8 +170,8 @@ publish/
 *.azurePubxml
 # Note: Comment the next line if you want to checkin your web deploy settings,
 # but database connection strings (with potential passwords) will be unencrypted
-*.pubxml
-*.publishproj
+#*.pubxml
+#*.publishproj
 
 # Microsoft Azure Web App publish settings. Comment the next line if you want to
 # checkin your Azure Web App publish settings, but sensitive information contained
@@ -200,7 +201,6 @@ rcf/
 # Windows Store app package directories and files
 AppPackages/
 BundleArtifacts/
-Package.StoreAssociation.xml
 _pkginfo.txt
 *.appx
 
@@ -329,7 +329,11 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 /.svn
-/src/AntiDupl/AntiDupl/adExternal.h
-/src/AntiDupl/AntiDupl.NET/External.cs
-/src/AntiDupl/AntiDupl.NET/Form/MainForm.resx
-/src/AntiDupl/AntiDupl.NET/Form/SearchExecuterForm.resx
+/src/AntiDupl/adExternal.h
+/src/AntiDupl.NET.Core/External.cs
+/src/AntiDupl.NET.WinForms/Form/MainForm.resx
+/src/AntiDupl.NET.WinForms/Form/SearchExecuterForm.resx
+/src/vcpkg_installed
+src/AntiDupl.NET.WinForms/Form/CoreOptionsForm.resx
+src/AntiDupl.NET.WinForms/Form/AboutProgramForm.resx
+src/AntiDupl.NET.WinForms/Form/StartFinishForm.resx
