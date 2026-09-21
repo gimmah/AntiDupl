@@ -43,10 +43,6 @@
 #include <algorithm>
 #include <limits>
 
-#define SIMD_STATIC
-#include "Simd/SimdLib.hpp"
-#include "Simd/SimdConversion.h"
-
 //#define AD_PERFORMANCE_TEST_ENABLE
 //#define AD_LOGGER_ENABLE
 //#define AD_DUMP_ENABLE
