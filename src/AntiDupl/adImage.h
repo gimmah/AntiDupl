@@ -68,8 +68,6 @@ namespace ad
 
         TFormat Format() const {return m_format;}
         TView* View() const {return m_pView;}
-        // Frees the decoded pixels early (keeps format and EXIF) to lower peak memory.
-        void ReleaseView() {FreeView();}
         
         static TStrings Extensions(TFormat format);
         static TImage* Load(HGLOBAL hGlobal, const TOptions * opOptions);
