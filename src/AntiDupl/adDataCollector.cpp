@@ -91,10 +91,6 @@ namespace ad
                 Simd::BgraToGray(*pImage->View(), gray);
             }
 
-            // The 32-bit pixels are no longer needed once gray is built: free them now
-            // so concurrent threads do not hold width*height*4 bytes during analysis.
-            pImage->ReleaseView();
-
 			pImageData->blockiness = GetBlockiness(gray);
 
 			TBlurringDetector blurringDetector;
