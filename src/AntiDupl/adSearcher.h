@@ -26,6 +26,9 @@
 
 #include "adConfig.h"
 
+#include <memory>
+#include <regex>
+
 namespace ad
 {
     struct TOptions;
@@ -58,6 +61,7 @@ namespace ad
         TOptions *m_pOptions;
         TImageDataStorage *m_pImageDataStorage;
         TStrings m_extensions;
+        std::unique_ptr<std::wregex> m_pFilenameFilter; // compiled once per search, NULL if no valid filter
         adUInt64 m_searchedImageSize;
     };
     //-------------------------------------------------------------------------

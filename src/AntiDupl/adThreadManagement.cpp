@@ -170,6 +170,9 @@ namespace ad
 
     void TCollectTask::DoOwn(TImageData *pImageData)
     {
+        // The file is read here, in the collect thread, so that several files can be
+        // read concurrently instead of serializing all disk I/O on the main thread.
+        pImageData->hGlobal = LoadFileToMemory(pImageData->path.Original().c_str());
         m_pDataCollector->Fill(pImageData);
         m_pCompareManager->Add(pImageData);
         m_pStatus->Process(AD_THREAD_TYPE_COLLECT, Queue()->Id(), pImageData->path.Original().c_str());
@@ -318,7 +321,6 @@ namespace ad
     {
         if(pImageData->DefectCheckingNeed(m_pOptions) || pImageData->PixelDataFillingNeed(m_pOptions) || pImageData->crc32c == 0)
         {
-            pImageData->hGlobal = LoadFileToMemory(pImageData->path.Original().c_str());
             size_t threadId = GetThreadId();
             m_pThreads->at(threadId).task->Queue()->Push(pImageData, threadId);
             m_pEngine->Status()->Assign(AD_THREAD_TYPE_COLLECT, threadId);

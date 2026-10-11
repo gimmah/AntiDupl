@@ -79,7 +79,10 @@ namespace ad
 
         TString searchPath = CreatePath(directory, TEXT("*"));
 
-        hFind = FindFirstFile(searchPath.c_str(), &findData);
+        // FindExInfoBasic skips the 8.3 short name lookup and FIND_FIRST_EX_LARGE_FETCH
+        // fetches more entries per call: both noticeably speed up large/network folders.
+        hFind = FindFirstFileEx(searchPath.c_str(), FindExInfoBasic, &findData,
+            FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
         if(hFind != INVALID_HANDLE_VALUE) 
         {
             do 
@@ -140,18 +143,17 @@ namespace ad
             if(extension == m_extensions[i])
             {
                 // Check filename filter - only applies to files
-                if(!m_pOptions->ignoreFilenameFilter.empty())
+                if(m_pFilenameFilter)
                 {
                     TString filename = GetFileName(path);
                     try
                     {
-                        std::wregex regex(m_pOptions->ignoreFilenameFilter);
-                        if(std::regex_match(filename, regex))
+                        if(std::regex_match(filename, *m_pFilenameFilter))
                             return false; // File matches filter, reject it
                     }
                     catch(...)
                     {
-                        // Invalid regex, ignore and accept file
+                        // Regex evaluation failed, accept file
                     }
                 }
                 return true;
@@ -180,6 +182,20 @@ namespace ad
         AddExtensions(AD_IMAGE_HEIF, m_pOptions->search.HEIF);
         AddExtensions(AD_IMAGE_AVIF, m_pOptions->search.AVIF);
         AddExtensions(AD_IMAGE_JXL, m_pOptions->search.JXL);
+
+        // Compile the filename filter once instead of for every file.
+        m_pFilenameFilter.reset();
+        if(!m_pOptions->ignoreFilenameFilter.empty())
+        {
+            try
+            {
+                m_pFilenameFilter.reset(new std::wregex(m_pOptions->ignoreFilenameFilter));
+            }
+            catch(...)
+            {
+                // Invalid regex, ignore it and accept all files
+            }
+        }
     }
 
     void TSearcher::AddExtensions(TImageType imageType, adBool enable)
