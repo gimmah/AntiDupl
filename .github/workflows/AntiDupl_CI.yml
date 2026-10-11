@@ -13,6 +13,8 @@ on:
 env:
   VCPKG_DEFAULT_TRIPLET: x64-windows-static
   VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+  # Keep in sync with .github/workflows/vcpkg_cache_keepalive.yml
+  VCPKG_COMMIT: a1cae005c39be7b18ba319fced856b68d7276271
 
 jobs:
 
@@ -45,28 +47,30 @@ jobs:
       working-directory: ${{env.GITHUB_WORKSPACE}}
       run: nuget restore ${{env.Solution_Name}}
 
+    # The key only changes with the vcpkg version or vcpkg.json, so a single cache
+    # entry is reused by every run instead of a new copy being saved per run.
     - name: Restore vcpkg binary archives
+      id: vcpkg-cache
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
+        key: vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('src/vcpkg.json') }}
         restore-keys: |
-          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-
-          vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-
+          vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-
 
     - name: Run and cache vcpkg dependecies
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: a1cae005c39be7b18ba319fced856b68d7276271
+        vcpkgGitCommitId: ${{ env.VCPKG_COMMIT }}
         vcpkgJsonGlob: src/vcpkg.json
         runVcpkgInstall: true
 
     - name: Save vcpkg binary archives
-      if: always()
+      if: steps.vcpkg-cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/vcpkg_cache
-        key: vcpkg-${{ runner.os }}-3b9d086009cc1c2256e9c28ad44a00036fbd9b26-${{ hashFiles('src/vcpkg.json') }}-${{ github.run_id }}
+        key: vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('src/vcpkg.json') }}
 
     - name: Integrate vcpkg
       working-directory: ${{env.VCPKG_ROOT}}
