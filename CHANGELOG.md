@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.16.0] - 2026-10-11
+### Changed
+- Faster image search: image files are now read by the collect threads instead
+  of the main thread, so several files are read concurrently; queued images no
+  longer hold their whole file in memory.
+- The filename filter regular expression is compiled once per search instead
+  of once per file.
+- Directory enumeration uses `FindFirstFileEx` with basic info and large fetch,
+  which speeds up scanning large or network folders.
+
+### Fixed
+- CI: the vcpkg dependency cache is now kept alive (scheduled keep-alive
+  workflow) and saved under a stable key, bringing builds back from ~1 h to
+  ~6 min.
+
 ## [2.3.15.0] - 2026-09-21
 ### Added
 - HEIF/HEIC image format support merged from `dev`, including RGB/RGBA to BGRA
@@ -62,7 +77,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New folder picker implementation.
 
-[Unreleased]: https://github.com/gimmah/AntiDupl/compare/v2.3.15.0...HEAD
+[Unreleased]: https://github.com/gimmah/AntiDupl/compare/v2.3.16...HEAD
+[2.3.16.0]: https://github.com/gimmah/AntiDupl/compare/v2.3.15...v2.3.16
 [2.3.15.0]: https://github.com/gimmah/AntiDupl/compare/v2.3.14...v2.3.15.0
 [2.3.14.0]: https://github.com/ermig1979/AntiDupl/compare/v2.3.13...v2.3.14
 [2.3.13.0]: https://github.com/ermig1979/AntiDupl/compare/v2.3.12...v2.3.13
