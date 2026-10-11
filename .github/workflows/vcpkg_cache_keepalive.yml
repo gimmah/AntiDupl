@@ -1,0 +1,55 @@
+name: vcpkg cache keep-alive
+
+# GitHub evicts caches that have not been accessed for 7 days, and pull requests can
+# only reuse caches created on their base or default branch. Without regular pushes
+# to master, the vcpkg cache disappears and every build recompiles all dependencies
+# (~1 hour instead of ~6 minutes). This job touches the cache on master every few
+# days, and rebuilds it there if it is missing, so it is always available to PRs.
+
+on:
+  schedule:
+    - cron: '17 3 */5 * *'
+  workflow_dispatch:
+
+env:
+  VCPKG_DEFAULT_TRIPLET: x64-windows-static
+  VCPKG_DEFAULT_HOST_TRIPLET: x64-windows-static
+  # Keep in sync with .github/workflows/AntiDupl_CI.yml
+  VCPKG_COMMIT: a1cae005c39be7b18ba319fced856b68d7276271
+
+jobs:
+
+  keepalive:
+
+    runs-on: windows-2022
+
+    env:
+      VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/vcpkg_cache,readwrite"
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Restore vcpkg binary archives
+      id: vcpkg-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('src/vcpkg.json') }}
+        restore-keys: |
+          vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-
+
+    - name: Rebuild vcpkg dependencies
+      if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+      uses: lukka/run-vcpkg@v11
+      with:
+        vcpkgGitCommitId: ${{ env.VCPKG_COMMIT }}
+        vcpkgJsonGlob: src/vcpkg.json
+        runVcpkgInstall: true
+
+    - name: Save vcpkg binary archives
+      if: steps.vcpkg-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/vcpkg_cache
+        key: vcpkg-${{ runner.os }}-${{ env.VCPKG_COMMIT }}-${{ hashFiles('src/vcpkg.json') }}
