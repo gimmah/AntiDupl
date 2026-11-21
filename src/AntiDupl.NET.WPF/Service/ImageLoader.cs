@@ -57,11 +57,13 @@ namespace AntiDupl.NET.WPF.Service
                     pBitmap[0].height = height;
                     pBitmap[0].stride = rawStride;
                     pBitmap[0].format = PixelFormatType.Argb32;
-                    pBitmap[0].data = Marshal.UnsafeAddrOfPinnedArrayElement(rawImage, 0);
-                    //CoreDll.Error error = m_dll.adLoadBitmapW(path, Marshal.UnsafeAddrOfPinnedArrayElement(pBitmap, 0));
-                    //_core.LoadBitmap(path, Marshal.UnsafeAddrOfPinnedArrayElement(pBitmap, 0));
-
-                    Error error = _core.LoadBitmap(path, pBitmap);
+                    Error error;
+                    // rawImage must stay pinned while the native code writes the pixels into it.
+                    using (PinnedArray rawImagePin = new PinnedArray(rawImage))
+                    {
+                        pBitmap[0].data = rawImagePin.Address;
+                        error = _core.LoadBitmap(path, pBitmap);
+                    }
 
                     //Marshal.FreeHGlobal(pBitmap[0].data);
 
@@ -175,8 +177,13 @@ namespace AntiDupl.NET.WPF.Service
                     pBitmap[0].height = height;
                     pBitmap[0].stride = rawStride;
                     pBitmap[0].format = PixelFormatType.Argb32;
-                    pBitmap[0].data = Marshal.UnsafeAddrOfPinnedArrayElement(rawImage, 0);
-                    Error error = _core.LoadBitmap(path, pBitmap);
+                    Error error;
+                    // rawImage must stay pinned while the native code writes the pixels into it.
+                    using (PinnedArray rawImagePin = new PinnedArray(rawImage))
+                    {
+                        pBitmap[0].data = rawImagePin.Address;
+                        error = _core.LoadBitmap(path, pBitmap);
+                    }
 
                     BitmapSource bitmapSource = BitmapSource.Create((int)width, (int)height,
                                         96, 96, pf, null,
