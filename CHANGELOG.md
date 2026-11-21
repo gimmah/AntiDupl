@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Random crash (access violation in `AntiDupl.dll`) when starting a search with
+  many search/ignore folders: the buffer holding the folder list was passed to
+  the native core without being pinned, so the .NET garbage collector could
+  free it while the core was still copying it. All buffers handed to the native
+  core are now pinned for the duration of the call.
 
 ## [2.3.16.0] - 2026-10-11
 ### Changed
