@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the native core without being pinned, so the .NET garbage collector could
   free it while the core was still copying it. All buffers handed to the native
   core are now pinned for the duration of the call.
+
 ## [2.3.16.0] - 2026-10-11
 ### Changed
 - Faster image search: image files are now read by the collect threads instead
