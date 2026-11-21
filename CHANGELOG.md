@@ -85,7 +85,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New folder picker implementation.
 
-[Unreleased]: https://github.com/gimmah/AntiDupl/compare/v2.3.16...HEAD
+[Unreleased]: https://github.com/gimmah/AntiDupl/compare/v2.3.17...HEAD
+[2.3.17.0]: https://github.com/gimmah/AntiDupl/compare/v2.3.16...v2.3.17
 [2.3.16.0]: https://github.com/gimmah/AntiDupl/compare/v2.3.15...v2.3.16
 [2.3.15.0]: https://github.com/gimmah/AntiDupl/compare/v2.3.14...v2.3.15.0
 [2.3.14.0]: https://github.com/ermig1979/AntiDupl/compare/v2.3.13...v2.3.14
